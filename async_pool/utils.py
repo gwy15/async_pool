@@ -46,8 +46,8 @@ class Producer():
 
 
 class Pool():
-    def __init__(self, workers=100):
-        if (workers <= 0):
+    def __init__(self, workers=0):
+        if (workers < 0):
             raise ValueError('Number of workers must be at least 1')
         self.workers = workers
 
@@ -57,7 +57,22 @@ class Pool():
     def __exit__(self, exc_type, exc_value, traceback):
         return
 
+    async def map_async_unlimited(self, afunc, args):
+        aws = [
+            afunc(arg) for arg in args
+        ]
+        task = asyncio.gather(*aws)
+        try:
+            results = await task
+            return results
+        except Exception as ex:
+            task.cancel()
+            raise
+
     async def map_async(self, afunc, args):
+        if self.workers == 0:
+            return await self.map_async_unlimited(afunc, args)
+
         iQueue = Queue()
         oQueue = Queue()
         consumers = [Consumer()
