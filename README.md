@@ -1,5 +1,7 @@
 Async Pool
 ---
+[![image](https://travis-ci.org/gwy15/async_pool.svg?branch=master)](https://travis-ci.org/gwy15/async_pool)
+![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)
 
 A simple wrapper of library asyncio providing a multiprocessing-library-like coroutine worker pool.
 

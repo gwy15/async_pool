@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="async_pool",
-    version="0.1",
+    version="0.1.2",
     keywords=("async", "multiprocessing", "producer-consumer"),
     description="A simple wrapper of library asyncio providing a multiprocessing-library-like coroutine worker pool.",
     license="MIT Licence",
@@ -13,5 +13,6 @@ setup(
 
     packages=find_packages(),
     include_package_data=True,
+    python_requires=">=3.7",
     platforms="any"
 )
