@@ -65,6 +65,8 @@ class Pool():
         try:
             results = await task
             return results
+        except asyncio.CancelledError:
+            raise
         except Exception as ex:
             task.cancel()
             raise
@@ -87,6 +89,8 @@ class Pool():
         try:
             results = await task
             return results[0]
+        except asyncio.CancelledError:
+            raise
         except Exception as ex:
             task.cancel()
             raise
