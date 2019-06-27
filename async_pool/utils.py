@@ -1,6 +1,47 @@
 import asyncio
 from asyncio import Queue
 
+def _cancel_all_tasks(loop):
+    to_cancel = asyncio.all_tasks(loop)
+    if not to_cancel:
+        return
+
+    for task in to_cancel:
+        task.cancel()
+
+    loop.run_until_complete(
+        asyncio.gather(*to_cancel, loop=loop, return_exceptions=True))
+
+    for task in to_cancel:
+        if task.cancelled():
+            continue
+        if task.exception() is not None:
+            loop.call_exception_handler({
+                'message': 'unhandled exception during asyncio.run() shutdown',
+                'exception': task.exception(),
+                'task': task,
+            })
+
+def _run(main, *, debug=False):
+    "For python 3.6 there's no asyncio.run"
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.set_debug(debug)
+    try:
+        return loop.run_until_complete(main)
+    finally:
+        try:
+            _cancel_all_tasks(loop)
+            loop.run_until_complete(loop.shutdown_asyncgens())
+        finally:
+            asyncio.set_event_loop(None)
+            loop.close()
+
+try:
+    from asyncio import run
+except:
+    run = _run
+
 
 class EndSignal():
     pass
@@ -96,4 +137,4 @@ class Pool():
             raise
 
     def map(self, afunc, args):
-        return asyncio.run(self.map_async(afunc, args))
+        return run(self.map_async(afunc, args))
