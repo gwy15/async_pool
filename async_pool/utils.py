@@ -1,8 +1,12 @@
+import sys
 import asyncio
 from asyncio import Queue
 
+
 def _cancel_all_tasks(loop):
-    to_cancel = asyncio.all_tasks(loop)
+    # asyncio.Task.all_tasks will be deprecated in python 3.9,
+    # but _cancel_all_tasks will only be call for python < 3.7
+    to_cancel = asyncio.Task.all_tasks(loop)
     if not to_cancel:
         return
 
@@ -22,12 +26,15 @@ def _cancel_all_tasks(loop):
                 'task': task,
             })
 
-def _run(main, *, debug=False):
-    "For python 3.6 there's no asyncio.run"
+
+def run(main, *, debug=False):
+    if sys.version_info >= (3, 7):
+        return asyncio.run(main)
+
     loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.set_debug(debug)
     try:
+        asyncio.set_event_loop(loop)
+        loop.set_debug(debug)
         return loop.run_until_complete(main)
     finally:
         try:
@@ -36,11 +43,6 @@ def _run(main, *, debug=False):
         finally:
             asyncio.set_event_loop(None)
             loop.close()
-
-try:
-    from asyncio import run
-except:
-    run = _run
 
 
 class EndSignal():
